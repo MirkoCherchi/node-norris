@@ -17,3 +17,7 @@ const readJSONData = (nomeFile) => {
   }
   return [];
 };
+
+server.listen(port, host, () => {
+  console.log(`Server avviato su http://${host}:${port}`);
+});
