@@ -18,6 +18,58 @@ const readJSONData = (nomeFile) => {
   return [];
 };
 
+// Scrivo i dati JSON
+const writeJSONData = (nomeFile, newData) => {
+  const filePath = path.join(__dirname, nomeFile + ".json");
+  const fileString = JSON.stringify(newData, null, 2);
+  fs.writeFileSync(filePath, fileString);
+};
+
+// Funzione per ottenere una battuta
+fetchJoke = async () => {
+  try {
+    const response = await fetch("https://api.chucknorris.io/jokes/random");
+    const data = await response.json();
+    return data.value;
+  } catch (error) {
+    console.error("Errore", error);
+    return null;
+  }
+};
+
+const server = http.createServer(async (req, res) => {
+  switch (req.url) {
+    case "/favicon.ico":
+      res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
+      res.end();
+      break;
+    case "/":
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+
+      // ottengo una battuta casuale
+      const joke = await fetchJoke();
+      if (joke) {
+        // leggo le battute salvate
+        const jokes = readJSONData(DB_FILE);
+        // aggiungo la nuova battuta
+        jokes.push({ joke, date: new Date().toISOString() });
+        // Salvo le battute aggiornate
+        writeJSONData(DB_FILE, jokes);
+
+        // stampo la battuta a schermo
+        res.end(`<h1>${joke}</h1>`);
+      } else {
+        res.writeHead(500, { "Content-Type": "text/html; charset=utf-8" });
+        res.end(`<h1>Errore nel recupero della battuta</h1>`);
+      }
+      break;
+    default:
+      res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
+      res.end(`<h1>Pagina non trovata</h1>`);
+      break;
+  }
+});
+
 server.listen(port, host, () => {
   console.log(`Server avviato su http://${host}:${port}`);
 });
